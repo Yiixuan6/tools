@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF → 图片 + 水印</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- 顶部标题栏 -->
+  <header class="topbar">
+    <h1 id="app-title">📄 PDF → 图片 + 水印</h1>
+    <nav class="category-tabs" id="category-tabs">
+      <button class="category-tab active" data-cat="pdf">📄 PDF处理</button>
+      <button class="category-tab" data-cat="word">📝 Word处理</button>
+      <button class="category-tab" data-cat="image">🖼️ 图片处理</button>
+      <button class="category-tab" data-cat="tools">🔧 小工具</button>
+    </nav>
+    <nav class="mode-tabs" id="mode-tabs">
+      <button class="mode-tab active" data-mode="pdf">📄 PDF → 图片 + 水印</button>
+      <button class="mode-tab" data-mode="pdfsplit">✂️ PDF分割</button>
+    </nav>
+  </header>
+
+  <!-- 主体区域 -->
+  <div class="main-layout">
+
+    <!-- ========== 左侧：上传 + 缩略图 + 大图预览 ========== -->
+    <section class="left-panel">
+
+      <!-- 上传区域 -->
+      <div id="upload-area" class="upload-area">
+        <div class="upload-icon">📁</div>
+        <p id="upload-hint" class="upload-hint">点击选择PDF文件 或 拖拽到此处</p>
+        <p id="file-name" class="file-name"></p>
+        <input type="file" id="file-input" accept=".pdf" multiple hidden>
+      </div>
+
+      <!-- 文件标签栏 -->
+      <div id="file-tabs" class="file-tabs" style="display:none;"></div>
+
+      <!-- 页面选择控制栏 -->
+      <div id="page-select-bar" class="page-select-bar" style="display:none;">
+        <input type="text" id="page-range-input" class="page-range-input" placeholder="如 1-5,8,10">
+        <button id="btn-select-all" class="btn-sm">全选</button>
+        <button id="btn-select-invert" class="btn-sm">反选</button>
+        <button id="btn-select-none" class="btn-sm">取消</button>
+      </div>
+
+      <!-- 缩略图列表 -->
+      <div id="thumbnail-list" class="thumbnail-list"></div>
+
+      <!-- 大图预览 -->
+      <div id="preview-section" class="preview-section" style="display:none;">
+        <div class="preview-header">
+          <span id="page-indicator" class="page-indicator">1 / 1</span>
+        </div>
+        <div id="preview-container" class="preview-container">
+          <div class="preview-placeholder">请上传PDF文件</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========== 右侧：水印设置 + 下载 ========== -->
+    <aside id="panel-watermark" class="right-panel" style="display:none;">
+
+      <!-- 水印开关 -->
+      <div class="panel-section">
+        <label class="switch-label">
+          <input type="checkbox" id="watermark-toggle" checked>
+          <span class="switch-track">
+            <span class="switch-thumb"></span>
+          </span>
+          <span class="switch-text">启用水印</span>
+        </label>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 水印类型选择 -->
+      <div class="panel-section">
+        <h3 class="section-title">水印类型</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="watermark-type" value="text" checked>
+            <span>文字水印</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="watermark-type" value="image">
+            <span>图片水印</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="watermark-type" value="tile-text">
+            <span>平铺文字</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="watermark-type" value="tile-image">
+            <span>平铺图片</span>
+          </label>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 文字水印设置面板 -->
+      <div id="panel-text" class="panel-section">
+        <h3 class="section-title">文字设置</h3>
+
+        <div class="form-group">
+          <label>文字内容</label>
+          <input type="text" id="wm-text" value="机密文件" class="text-input">
+        </div>
+
+        <div class="form-group">
+          <label>字体大小</label>
+          <div class="slider-row">
+            <input type="range" id="wm-font-size" min="12" max="120" value="45">
+            <span id="wm-font-size-val" class="slider-val">45px</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>颜色</label>
+          <input type="color" id="wm-color" value="#000000" class="color-input">
+        </div>
+
+        <div class="form-group">
+          <label>透明度</label>
+          <div class="slider-row">
+            <input type="range" id="wm-opacity" min="0" max="1" step="0.05" value="0.3">
+            <span id="wm-opacity-val" class="slider-val">30%</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>旋转角度</label>
+          <div class="slider-row">
+            <input type="range" id="wm-rotation" min="-90" max="90" value="45">
+            <span id="wm-rotation-val" class="slider-val">45°</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>位置</label>
+          <div class="position-grid">
+            <button class="position-btn" data-pos="top-left">↖</button>
+            <button class="position-btn" data-pos="top-center">↑</button>
+            <button class="position-btn" data-pos="top-right">↗</button>
+            <button class="position-btn" data-pos="center-left">←</button>
+            <button class="position-btn active" data-pos="center">⊙</button>
+            <button class="position-btn" data-pos="center-right">→</button>
+            <button class="position-btn" data-pos="bottom-left">↙</button>
+            <button class="position-btn" data-pos="bottom-center">↓</button>
+            <button class="position-btn" data-pos="bottom-right">↘</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图片水印设置面板 -->
+      <div id="panel-image" class="panel-section" style="display:none;">
+        <h3 class="section-title">图片设置</h3>
+
+        <div class="form-group">
+          <label>水印图片</label>
+          <div class="image-upload-row">
+            <input type="file" id="wm-image-upload" accept="image/*" class="file-input-small">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>缩放比例</label>
+          <div class="slider-row">
+            <input type="range" id="wm-image-scale" min="0.05" max="1" step="0.05" value="0.3">
+            <span id="wm-image-scale-val" class="slider-val">30%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 平铺模式设置面板 -->
+      <div id="panel-tile" class="panel-section" style="display:none;">
+        <h3 class="section-title">平铺设置</h3>
+
+        <div class="form-group">
+          <label>水平间距</label>
+          <div class="slider-row">
+            <input type="range" id="wm-tile-gap-x" min="20" max="500" value="200">
+            <span id="wm-tile-gap-x-val" class="slider-val">200px</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>垂直间距</label>
+          <div class="slider-row">
+            <input type="range" id="wm-tile-gap-y" min="20" max="500" value="200">
+            <span id="wm-tile-gap-y-val" class="slider-val">200px</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 输出格式 -->
+      <div class="panel-section">
+        <h3 class="section-title">输出格式</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="output-format" value="png" checked>
+            <span>PNG</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="output-format" value="jpeg">
+            <span>JPEG</span>
+          </label>
+        </div>
+        <div id="quality-group" class="form-group" style="display:none; margin-top: 10px;">
+          <label>JPEG质量</label>
+          <div class="slider-row">
+            <input type="range" id="output-quality" min="0.1" max="1" step="0.05" value="0.92">
+            <span id="output-quality-val" class="slider-val">92%</span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- ========== 页边距裁剪 ========== -->
+      <div class="panel-section">
+        <div class="section-header-row">
+          <h3 class="section-title">页边距裁剪</h3>
+          <label class="switch-label">
+            <input type="checkbox" id="crop-toggle">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </label>
+        </div>
+        <div id="panel-crop" style="display:none;">
+          <div class="radio-group" style="margin-bottom: 8px;">
+            <label class="radio-label">
+              <input type="radio" name="crop-mode" value="manual" checked>
+              <span>手动</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="crop-mode" value="auto">
+              <span>自动检测</span>
+            </label>
+          </div>
+          <!-- 手动模式 -->
+          <div id="crop-manual">
+            <div class="crop-grid">
+              <div class="crop-row">
+                <div class="crop-cell empty"></div>
+                <div class="crop-cell">
+                  <input type="number" id="crop-top" class="crop-input" value="0" min="0" step="1">
+                  <span class="crop-label">上</span>
+                </div>
+                <div class="crop-cell empty"></div>
+              </div>
+              <div class="crop-row">
+                <div class="crop-cell">
+                  <input type="number" id="crop-left" class="crop-input" value="0" min="0" step="1">
+                  <span class="crop-label">左</span>
+                </div>
+                <div class="crop-cell center-icon">✂</div>
+                <div class="crop-cell">
+                  <input type="number" id="crop-right" class="crop-input" value="0" min="0" step="1">
+                  <span class="crop-label">右</span>
+                </div>
+              </div>
+              <div class="crop-row">
+                <div class="crop-cell empty"></div>
+                <div class="crop-cell">
+                  <input type="number" id="crop-bottom" class="crop-input" value="0" min="0" step="1">
+                  <span class="crop-label">下</span>
+                </div>
+                <div class="crop-cell empty"></div>
+              </div>
+            </div>
+          </div>
+          <!-- 自动模式 -->
+          <div id="crop-auto" style="display:none;">
+            <div class="form-group">
+              <label>颜色容差</label>
+              <div class="slider-row">
+                <input type="range" id="crop-tolerance" min="0" max="50" value="10">
+                <span id="crop-tolerance-val" class="slider-val">10</span>
+              </div>
+            </div>
+            <button id="btn-auto-detect" class="btn-sm" style="width:100%;">🔍 自动检测边距</button>
+            <div id="auto-crop-result" class="auto-crop-result" style="display:none;">
+              <span class="crop-result-text">检测结果：上<span id="auto-top">0</span>px 下<span id="auto-bottom">0</span>px 左<span id="auto-left">0</span>px 右<span id="auto-right">0</span>px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- ========== 自定义尺寸 ========== -->
+      <div class="panel-section">
+        <div class="section-header-row">
+          <h3 class="section-title">自定义尺寸</h3>
+          <label class="switch-label">
+            <input type="checkbox" id="resize-toggle">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </label>
+        </div>
+        <div id="panel-resize" style="display:none;">
+          <div class="preset-buttons">
+            <button class="btn-preset" data-w="1920" data-h="1080">1080p</button>
+            <button class="btn-preset" data-w="2560" data-h="1440">2K</button>
+            <button class="btn-preset" data-w="2480" data-h="3508">A4@300dpi</button>
+            <button class="btn-preset" data-w="1080" data-h="1920">竖屏1080</button>
+          </div>
+          <div class="dimension-row">
+            <div class="dimension-input-group">
+              <label>宽度</label>
+              <input type="number" id="resize-width" class="text-input" value="1920" min="1" step="1">
+            </div>
+            <span class="dimension-sep">×</span>
+            <div class="dimension-input-group">
+              <label>高度</label>
+              <input type="number" id="resize-height" class="text-input" value="1080" min="1" step="1">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 6px;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="resize-keep-aspect" checked>
+              <span>保持原始比例（居中适配）</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- ========== 页码叠加 ========== -->
+      <div class="panel-section">
+        <div class="section-header-row">
+          <h3 class="section-title">页码叠加</h3>
+          <label class="switch-label">
+            <input type="checkbox" id="pagenum-toggle">
+            <span class="switch-track"><span class="switch-thumb"></span></span>
+          </label>
+        </div>
+        <div id="panel-pagenum" style="display:none;">
+          <div class="form-group">
+            <label>格式</label>
+            <input type="text" id="pagenum-format" class="text-input" value="{page} / {total}" placeholder="{page} / {total}">
+          </div>
+          <div class="form-group">
+            <label>字体大小</label>
+            <div class="slider-row">
+              <input type="range" id="pagenum-font-size" min="12" max="120" value="30">
+              <span id="pagenum-font-size-val" class="slider-val">30px</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>颜色</label>
+            <input type="color" id="pagenum-color" value="#333333" class="color-input">
+          </div>
+          <div class="form-group">
+            <label>透明度</label>
+            <div class="slider-row">
+              <input type="range" id="pagenum-opacity" min="0" max="1" step="0.05" value="0.8">
+              <span id="pagenum-opacity-val" class="slider-val">80%</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>位置</label>
+            <div class="position-grid" id="pagenum-position-grid">
+              <button class="position-btn" data-pos="top-left">↖</button>
+              <button class="position-btn" data-pos="top-center">↑</button>
+              <button class="position-btn" data-pos="top-right">↗</button>
+              <button class="position-btn" data-pos="center-left">←</button>
+              <button class="position-btn" data-pos="center">⊙</button>
+              <button class="position-btn" data-pos="center-right">→</button>
+              <button class="position-btn" data-pos="bottom-left">↙</button>
+              <button class="position-btn active" data-pos="bottom-center">↓</button>
+              <button class="position-btn" data-pos="bottom-right">↘</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- 下载按钮区域 -->
+      <div class="panel-section" id="download-section" style="display:none;">
+        <button id="btn-download-current" class="btn btn-primary">
+          ⬇ 下载当前页
+        </button>
+        <button id="btn-download-pdf" class="btn btn-primary-outline">
+          📑 导出 PDF
+        </button>
+        <button id="btn-download-all" class="btn btn-secondary">
+          📦 下载全部选中 (ZIP)
+        </button>
+      </div>
+
+    </aside>
+
+    <!-- ========== 文档分割 右侧面板 ========== -->
+    <aside id="panel-splitter" class="right-panel" style="display:none;">
+
+      <div class="panel-section">
+        <h3 class="section-title">输出格式</h3>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="split-output-format" value="pdf" checked>
+            <span>PDF</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="split-output-format" value="docx">
+            <span>DOCX</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="split-output-format" value="png">
+            <span>PNG</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="split-output-format" value="jpeg">
+            <span>JPEG</span>
+          </label>
+        </div>
+        <p id="split-docx-note" style="display:none; font-size:0.7rem; color:var(--text-muted);margin-top:6px;">
+          DOCX 格式需提取文本，生成可编辑的 Word 文档
+        </p>
+      </div>
+
+      <hr class="divider">
+
+      <div class="panel-section">
+        <h3 class="section-title">页面范围</h3>
+        <div class="form-group">
+          <label>分组范围（每组一个文件）</label>
+          <input type="text" id="split-range-input" class="text-input" placeholder="如 1-10  或  1-5, 8-12, 15-20">
+        </div>
+        <div style="margin-top: 6px;">
+          <label class="checkbox-label">
+            <input type="checkbox" id="split-remainder-cb" checked>
+            <span>剩余未选页面单独打包为一个文件</span>
+          </label>
+        </div>
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:6px;">
+          每个逗号分隔的范围生成一个文件，页码范围可多页
+        </p>
+      </div>
+
+      <hr class="divider">
+
+      <div class="panel-section">
+        <button id="btn-split-document" class="btn btn-primary">
+          ✂️ 分割文档
+        </button>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ========== 图片分割工作区 ========== -->
+  <div id="cut-workspace" class="cut-workspace" style="display:none;">
+
+    <!-- 拖拽上传区 -->
+    <div id="cut-drop-zone" class="cut-drop-zone">
+      <div class="cut-icon">🖼️</div>
+      <p>拖放图片到这里，或 <span class="cut-browse">点击浏览</span></p>
+      <input type="file" id="cut-file-input" accept="image/*" hidden>
+    </div>
+
+    <!-- 信息栏 -->
+    <div id="cut-info-bar" class="cut-info-bar"></div>
+
+    <!-- 画布 -->
+    <div class="cut-canvas-wrapper">
+      <canvas id="cut-canvas"></canvas>
+    </div>
+
+    <!-- 控制栏 -->
+    <div class="cut-controls" id="cut-controls" style="display:none;">
+      <div class="cut-btn-group" id="cut-direction-group">
+        <button data-dir="vertical" class="active">⬌ 左右分</button>
+        <button data-dir="horizontal">⬍ 上下分</button>
+      </div>
+
+      <div class="cut-slider-group">
+        <label for="cut-split-slider">分割位置</label>
+        <input type="range" id="cut-split-slider" min="5" max="95" value="50" step="1">
+        <span class="value" id="cut-split-value">50%</span>
+      </div>
+
+      <button class="cut-btn cut-btn-download" id="cut-btn-download">⬇ 下载两部分</button>
+      <button class="cut-btn cut-btn-reset" id="cut-btn-reset">↺ 重新选择</button>
+    </div>
+
+    <!-- 水印设置面板 -->
+    <div id="cut-watermark-section" class="cut-watermark-section" style="display:none;">
+      <label class="switch-label" style="justify-content: flex-start;">
+        <input type="checkbox" id="cut-wm-toggle">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-text">启用水印</span>
+      </label>
+
+      <div id="cut-watermark-panel" class="cut-watermark-panel" style="display:none;">
+        <div class="form-group">
+          <label>文字内容</label>
+          <input type="text" id="cut-wm-text" value="机密文件" class="text-input">
+        </div>
+        <div class="cut-wm-row">
+          <div class="form-group" style="flex:1;">
+            <label>字体大小</label>
+            <div class="slider-row">
+              <input type="range" id="cut-wm-font-size" min="12" max="120" value="36">
+              <span id="cut-wm-font-size-val" class="slider-val">36px</span>
+            </div>
+          </div>
+          <div class="form-group" style="flex:0 0 auto;">
+            <label>颜色</label>
+            <input type="color" id="cut-wm-color" value="#000000" class="color-input">
+          </div>
+        </div>
+        <div class="cut-wm-row">
+          <div class="form-group" style="flex:1;">
+            <label>透明度</label>
+            <div class="slider-row">
+              <input type="range" id="cut-wm-opacity" min="0" max="1" step="0.05" value="0.3">
+              <span id="cut-wm-opacity-val" class="slider-val">30%</span>
+            </div>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label>旋转角度</label>
+            <div class="slider-row">
+              <input type="range" id="cut-wm-rotation" min="-90" max="90" value="45">
+              <span id="cut-wm-rotation-val" class="slider-val">45°</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 预览卡片 -->
+    <div class="cut-previews" id="cut-previews" style="display:none;">
+      <div class="cut-preview-card">
+        <div class="label">第一部分</div>
+        <img id="cut-preview-a" alt="预览 A">
+        <div class="size" id="cut-size-a"></div>
+      </div>
+      <div class="cut-preview-card">
+        <div class="label">第二部分</div>
+        <img id="cut-preview-b" alt="预览 B">
+        <div class="size" id="cut-size-b"></div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="cut-toast" id="cut-toast"></div>
+  </div>
+
+  <!-- ========== 数字工具工作区 ========== -->
+  <div id="number-workspace" class="number-workspace" style="display:none;">
+
+    <!-- 头部 -->
+    <div class="num-header">
+      <div class="num-sub">中文大写转换 · 计算器</div>
+    </div>
+
+    <!-- 子标签 -->
+    <div class="num-tabs">
+      <button class="num-tab-btn active" data-num-tab="calc">🧮 计算器</button>
+      <button class="num-tab-btn" data-num-tab="toChinese">🔤 数字 → 中文</button>
+      <button class="num-tab-btn" data-num-tab="fromChinese">🔢 中文 → 数字</button>
+    </div>
+
+    <!-- ===== 子面板：计算器 ===== -->
+    <div class="num-tab-content active" id="num-tab-calc">
+      <div class="num-calc-display">
+        <div class="num-calc-expr" id="num-calc-expr">&nbsp;</div>
+        <div class="num-calc-val" id="num-calc-val">0</div>
+      </div>
+
+      <div class="num-calc-pad" id="num-calc-pad">
+        <button class="num-calc-btn num-fn" data-action="clear">C</button>
+        <button class="num-calc-btn num-fn" data-action="backspace">⌫</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val="(">(</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val=")">)</button>
+
+        <button class="num-calc-btn" data-action="digit" data-val="7">7</button>
+        <button class="num-calc-btn" data-action="digit" data-val="8">8</button>
+        <button class="num-calc-btn" data-action="digit" data-val="9">9</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val="/">÷</button>
+
+        <button class="num-calc-btn" data-action="digit" data-val="4">4</button>
+        <button class="num-calc-btn" data-action="digit" data-val="5">5</button>
+        <button class="num-calc-btn" data-action="digit" data-val="6">6</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val="*">×</button>
+
+        <button class="num-calc-btn" data-action="digit" data-val="1">1</button>
+        <button class="num-calc-btn" data-action="digit" data-val="2">2</button>
+        <button class="num-calc-btn" data-action="digit" data-val="3">3</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val="-">−</button>
+
+        <button class="num-calc-btn num-op" data-action="op" data-val="%">%</button>
+        <button class="num-calc-btn" data-action="digit" data-val="0">0</button>
+        <button class="num-calc-btn" data-action="digit" data-val=".">.</button>
+        <button class="num-calc-btn num-op" data-action="op" data-val="+">+</button>
+
+        <button class="num-calc-btn num-span2" data-action="digit" data-val="00">00</button>
+        <button class="num-calc-btn num-eq num-span2" data-action="eq">=</button>
+      </div>
+
+      <div class="num-result-area" id="num-calc-results">
+        <div class="num-result-empty">点击数字和运算符进行计算，结果显示在下方</div>
+      </div>
+    </div>
+
+    <!-- ===== 子面板：数字 → 中文 ===== -->
+    <div class="num-tab-content" id="num-tab-toChinese">
+      <div class="num-input-group">
+        <label for="num-num-input">输入数字或表达式</label>
+        <div class="num-input-row">
+          <input type="text" id="num-num-input" placeholder="例如：123.45  或  100+200  (8+2)×50" autocomplete="off">
+          <button class="num-btn num-btn-primary" id="num-convert-btn">转换</button>
+        </div>
+      </div>
+
+      <label class="num-toggle-row">
+        <input type="checkbox" id="num-financial-cb">
+        <span>金融格式（元角分整）</span>
+      </label>
+
+      <div class="num-examples">
+        <span style="font-size:0.75rem;color:var(--text-muted);line-height:2">示例：</span>
+        <span class="num-example-chip" data-num="123.45">123.45</span>
+        <span class="num-example-chip" data-num="100+200">100+200</span>
+        <span class="num-example-chip" data-num="(8+2)×50">(8+2)×50</span>
+        <span class="num-example-chip" data-num="100000000">1亿</span>
+        <span class="num-example-chip" data-num="10020">10020</span>
+        <span class="num-example-chip" data-num="-9876.54">-9876.54</span>
+      </div>
+
+      <div class="num-result-area" id="num-to-chinese-results">
+        <div class="num-result-empty">输入数字后点击"转换"查看中文写法</div>
+      </div>
+    </div>
+
+    <!-- ===== 子面板：中文 → 数字 ===== -->
+    <div class="num-tab-content" id="num-tab-fromChinese">
+      <div class="num-input-group">
+        <label for="num-chinese-input">输入中文数字</label>
+        <div class="num-input-row">
+          <input type="text" id="num-chinese-input" placeholder="例如：一千二百三十四万五千六百七十八" autocomplete="off">
+          <button class="num-btn num-btn-primary" id="num-chinese-convert-btn">转换</button>
+        </div>
+      </div>
+
+      <div class="num-examples">
+        <span style="font-size:0.75rem;color:var(--text-muted);line-height:2">示例：</span>
+        <span class="num-example-chip" data-cn="一千二百三十四万五千六百七十八">大写数字</span>
+        <span class="num-example-chip" data-cn="壹佰贰拾叁元肆角伍分">金融大写</span>
+        <span class="num-example-chip" data-cn="一亿零一">含零</span>
+        <span class="num-example-chip" data-cn="负十万">负数</span>
+        <span class="num-example-chip" data-cn="三点一四">小数</span>
+      </div>
+
+      <div class="num-result-area" id="num-from-chinese-results">
+        <div class="num-result-empty">输入中文数字后点击"转换"查看阿拉伯数字</div>
+      </div>
+    </div>
+
+    <div class="num-footer">支持大写（壹贰叁…）和小写（一二三…）· 数字 ≤ 10¹⁶</div>
+  </div>
+
+  <!-- 图片放大灯箱 -->
+  <div id="lightbox" class="lightbox" style="display:none;">
+    <span id="lightbox-close" class="lightbox-close">×</span>
+    <img id="lightbox-img" src="" alt="预览大图">
+  </div>
+
+  <!-- 心跳: 页面关闭后服务器自动退出 -->
+  <script>
+    setInterval(() => { fetch('/heartbeat').catch(()=>{}) }, 3000);
+  </script>
+
+  <!-- ========== 本地库文件 ========== -->
+  <script src="lib/pdf.min.js"></script>
+  <script src="lib/jszip.min.js"></script>
+  <script src="lib/jspdf.umd.min.js"></script>
+  <script src="lib/html2canvas.min.js"></script>
+  <script src="lib/mammoth.browser.min.js"></script>
+
+  <!-- ========== 应用模块 ========== -->
+  <script src="js/pdf-renderer.js"></script>
+  <script src="js/watermark.js"></script>
+  <script src="js/page-processor.js"></script>
+  <script src="js/word-converter.js"></script>
+  <script src="js/pdf-to-word.js"></script>
+  <script src="js/document-splitter.js"></script>
+  <script src="js/download.js"></script>
+  <script src="js/picture-cut.js"></script>
+  <script src="js/number-tool.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
