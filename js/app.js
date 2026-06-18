@@ -439,7 +439,7 @@ const App = {
     document.getElementById('resize-keep-aspect').addEventListener('change', (e) => {
       this.state.resize.keepAspect = e.target.checked;
     });
-    document.querySelectorAll('.btn-preset').forEach((btn) => {
+    document.querySelectorAll('.preset-chip').forEach((btn) => {
       btn.addEventListener('click', () => {
         const w = parseInt(btn.dataset.w);
         const h = parseInt(btn.dataset.h);

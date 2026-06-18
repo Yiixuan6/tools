@@ -3,199 +3,216 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDF → 图片 + 水印</title>
+  <title>PDF 工具箱 — 转换 · 水印 · 分割 · 裁剪</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <!-- 顶部标题栏 -->
-  <header class="topbar">
-    <h1 id="app-title">📄 PDF → 图片 + 水印</h1>
-    <nav class="category-tabs" id="category-tabs">
-      <button class="category-tab active" data-cat="pdf">📄 PDF处理</button>
-      <button class="category-tab" data-cat="word">📝 Word处理</button>
-      <button class="category-tab" data-cat="image">🖼️ 图片处理</button>
-      <button class="category-tab" data-cat="tools">🔧 小工具</button>
-    </nav>
-    <nav class="mode-tabs" id="mode-tabs">
-      <button class="mode-tab active" data-mode="pdf">📄 PDF → 图片 + 水印</button>
-      <button class="mode-tab" data-mode="pdfsplit">✂️ PDF分割</button>
-    </nav>
+  <!-- ====== SVG 图标仓库 ====== -->
+  <svg style="display:none;" aria-hidden="true">
+    <defs>
+      <!-- 文件类 -->
+      <symbol id="icon-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></symbol>
+      <symbol id="icon-word" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h4"/><path d="M14 13l-2 4 2 4"/></symbol>
+      <symbol id="icon-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></symbol>
+      <symbol id="icon-tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+
+      <!-- 操作类 -->
+      <symbol id="icon-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></symbol>
+      <symbol id="icon-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+      <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+      <symbol id="icon-file-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+      <symbol id="icon-zip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="10" y1="7" x2="14" y2="7"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="10" y1="11" x2="14" y2="11"/><line x1="10" y1="13" x2="12" y2="13"/><line x1="12" y1="13" x2="14" y2="13"/></symbol>
+      <symbol id="icon-crop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></symbol>
+      <symbol id="icon-resize" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></symbol>
+      <symbol id="icon-hash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></symbol>
+
+      <!-- 导航/控件类 -->
+      <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></symbol>
+      <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+      <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+      <symbol id="icon-calculator" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="16" y1="10" x2="16" y2="10.01"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/><line x1="8" y1="18" x2="16" y2="18"/></symbol>
+      <symbol id="icon-type" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></symbol>
+      <symbol id="icon-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+      <symbol id="icon-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+      <symbol id="icon-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+      <symbol id="icon-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
+      <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+
+      <!-- 通用 -->
+      <symbol id="icon-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+      <symbol id="icon-crosshair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></symbol>
+      <symbol id="icon-grid-3x3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+      <symbol id="icon-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></symbol>
+    </defs>
+  </svg>
+
+  <!-- ====== 顶部工具栏 ====== -->
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <div class="topbar-brand">
+        <svg class="brand-icon" aria-hidden="true"><use href="#icon-tool"/></svg>
+        <h1 id="app-title">PDF 工具箱</h1>
+      </div>
+      <nav class="category-tabs" id="category-tabs" role="tablist" aria-label="功能分类">
+        <button class="category-tab active" data-cat="pdf" role="tab" aria-selected="true" aria-controls="panel-main">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-pdf"/></svg>
+          <span>PDF 处理</span>
+        </button>
+        <button class="category-tab" data-cat="word" role="tab" aria-selected="false" aria-controls="panel-main">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-word"/></svg>
+          <span>Word 文档</span>
+        </button>
+        <button class="category-tab" data-cat="image" role="tab" aria-selected="false" aria-controls="panel-main">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-image"/></svg>
+          <span>图片处理</span>
+        </button>
+        <button class="category-tab" data-cat="tools" role="tab" aria-selected="false" aria-controls="panel-main">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-calculator"/></svg>
+          <span>小工具</span>
+        </button>
+      </nav>
+      <nav class="mode-tabs" id="mode-tabs" role="tablist" aria-label="子功能">
+        <button class="mode-tab active" data-mode="pdf" role="tab" aria-selected="true">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"/></svg>
+          <span>水印渲染</span>
+        </button>
+        <button class="mode-tab" data-mode="pdfsplit" role="tab" aria-selected="false">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-scissors"/></svg>
+          <span>PDF 分割</span>
+        </button>
+      </nav>
+    </div>
   </header>
 
-  <!-- 主体区域 -->
-  <div class="main-layout">
+  <!-- ====== 主体 ====== -->
+  <div id="panel-main" class="main-layout">
 
-    <!-- ========== 左侧：上传 + 缩略图 + 大图预览 ========== -->
-    <section class="left-panel">
+    <!-- ====== 左侧：上传 + 预览 ====== -->
+    <section class="left-panel" aria-label="上传和预览">
 
       <!-- 上传区域 -->
-      <div id="upload-area" class="upload-area">
-        <div class="upload-icon">📁</div>
-        <p id="upload-hint" class="upload-hint">点击选择PDF文件 或 拖拽到此处</p>
+      <div id="upload-area" class="upload-area" role="button" tabindex="0" aria-label="点击或拖拽上传 PDF 文件" aria-describedby="upload-hint">
+        <svg class="upload-icon" aria-hidden="true"><use href="#icon-upload"/></svg>
+        <p id="upload-hint" class="upload-hint">点击选择 PDF 文件，或拖拽到此处</p>
         <p id="file-name" class="file-name"></p>
         <input type="file" id="file-input" accept=".pdf" multiple hidden>
       </div>
 
       <!-- 文件标签栏 -->
-      <div id="file-tabs" class="file-tabs" style="display:none;"></div>
+      <div id="file-tabs" class="file-tabs" style="display:none;" role="tablist" aria-label="已加载文件"></div>
 
       <!-- 页面选择控制栏 -->
       <div id="page-select-bar" class="page-select-bar" style="display:none;">
-        <input type="text" id="page-range-input" class="page-range-input" placeholder="如 1-5,8,10">
-        <button id="btn-select-all" class="btn-sm">全选</button>
-        <button id="btn-select-invert" class="btn-sm">反选</button>
-        <button id="btn-select-none" class="btn-sm">取消</button>
+        <input type="text" id="page-range-input" class="page-range-input" placeholder="如 1-5, 8, 10" aria-label="页面范围">
+        <button id="btn-select-all" class="btn-chip">全选</button>
+        <button id="btn-select-invert" class="btn-chip">反选</button>
+        <button id="btn-select-none" class="btn-chip">取消</button>
       </div>
 
       <!-- 缩略图列表 -->
-      <div id="thumbnail-list" class="thumbnail-list"></div>
+      <div id="thumbnail-list" class="thumbnail-list" aria-label="页面缩略图"></div>
 
       <!-- 大图预览 -->
-      <div id="preview-section" class="preview-section" style="display:none;">
+      <div id="preview-section" class="preview-section" style="display:none;" aria-label="页面预览">
         <div class="preview-header">
           <span id="page-indicator" class="page-indicator">1 / 1</span>
         </div>
         <div id="preview-container" class="preview-container">
-          <div class="preview-placeholder">请上传PDF文件</div>
+          <div class="preview-placeholder">
+            <svg class="placeholder-icon" aria-hidden="true"><use href="#icon-image"/></svg>
+            <span>请上传 PDF 文件</span>
+          </div>
         </div>
       </div>
 
     </section>
 
-    <!-- ========== 右侧：水印设置 + 下载 ========== -->
-    <aside id="panel-watermark" class="right-panel" style="display:none;">
+    <!-- ====== 右侧：水印设置面板 ====== -->
+    <aside id="panel-watermark" class="right-panel" style="display:none;" aria-label="水印设置">
 
       <!-- 水印开关 -->
       <div class="panel-section">
         <label class="switch-label">
-          <input type="checkbox" id="watermark-toggle" checked>
-          <span class="switch-track">
-            <span class="switch-thumb"></span>
-          </span>
           <span class="switch-text">启用水印</span>
+          <input type="checkbox" id="watermark-toggle" checked>
+          <span class="switch-track"><span class="switch-thumb"></span></span>
         </label>
       </div>
 
-      <hr class="divider">
-
-      <!-- 水印类型选择 -->
+      <!-- 水印类型 -->
       <div class="panel-section">
         <h3 class="section-title">水印类型</h3>
         <div class="radio-group">
-          <label class="radio-label">
-            <input type="radio" name="watermark-type" value="text" checked>
-            <span>文字水印</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="watermark-type" value="image">
-            <span>图片水印</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="watermark-type" value="tile-text">
-            <span>平铺文字</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="watermark-type" value="tile-image">
-            <span>平铺图片</span>
-          </label>
+          <label class="radio-label"><input type="radio" name="watermark-type" value="text" checked><span>文字</span></label>
+          <label class="radio-label"><input type="radio" name="watermark-type" value="image"><span>图片</span></label>
+          <label class="radio-label"><input type="radio" name="watermark-type" value="tile-text"><span>平铺文字</span></label>
+          <label class="radio-label"><input type="radio" name="watermark-type" value="tile-image"><span>平铺图片</span></label>
         </div>
       </div>
 
       <hr class="divider">
 
-      <!-- 文字水印设置面板 -->
+      <!-- 文字水印 -->
       <div id="panel-text" class="panel-section">
         <h3 class="section-title">文字设置</h3>
-
+        <div class="form-group"><label for="wm-text">文字内容</label><input type="text" id="wm-text" value="机密文件" class="text-input"></div>
         <div class="form-group">
-          <label>文字内容</label>
-          <input type="text" id="wm-text" value="机密文件" class="text-input">
+          <label for="wm-font-size">字体大小</label>
+          <div class="slider-row"><input type="range" id="wm-font-size" min="12" max="120" value="45"><span id="wm-font-size-val" class="slider-val">45px</span></div>
         </div>
-
+        <div class="form-group"><label for="wm-color">颜色</label><input type="color" id="wm-color" value="#000000" class="color-input"></div>
         <div class="form-group">
-          <label>字体大小</label>
-          <div class="slider-row">
-            <input type="range" id="wm-font-size" min="12" max="120" value="45">
-            <span id="wm-font-size-val" class="slider-val">45px</span>
-          </div>
+          <label for="wm-opacity">透明度</label>
+          <div class="slider-row"><input type="range" id="wm-opacity" min="0" max="1" step="0.05" value="0.3"><span id="wm-opacity-val" class="slider-val">30%</span></div>
         </div>
-
         <div class="form-group">
-          <label>颜色</label>
-          <input type="color" id="wm-color" value="#000000" class="color-input">
+          <label for="wm-rotation">旋转角度</label>
+          <div class="slider-row"><input type="range" id="wm-rotation" min="-90" max="90" value="45"><span id="wm-rotation-val" class="slider-val">45°</span></div>
         </div>
-
-        <div class="form-group">
-          <label>透明度</label>
-          <div class="slider-row">
-            <input type="range" id="wm-opacity" min="0" max="1" step="0.05" value="0.3">
-            <span id="wm-opacity-val" class="slider-val">30%</span>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>旋转角度</label>
-          <div class="slider-row">
-            <input type="range" id="wm-rotation" min="-90" max="90" value="45">
-            <span id="wm-rotation-val" class="slider-val">45°</span>
-          </div>
-        </div>
-
         <div class="form-group">
           <label>位置</label>
           <div class="position-grid">
-            <button class="position-btn" data-pos="top-left">↖</button>
-            <button class="position-btn" data-pos="top-center">↑</button>
-            <button class="position-btn" data-pos="top-right">↗</button>
-            <button class="position-btn" data-pos="center-left">←</button>
-            <button class="position-btn active" data-pos="center">⊙</button>
-            <button class="position-btn" data-pos="center-right">→</button>
-            <button class="position-btn" data-pos="bottom-left">↙</button>
-            <button class="position-btn" data-pos="bottom-center">↓</button>
-            <button class="position-btn" data-pos="bottom-right">↘</button>
+            <button class="position-btn" data-pos="top-left" aria-label="左上"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="top-center" aria-label="上中"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="top-right" aria-label="右上"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="center-left" aria-label="左中"><svg><use href="#icon-arrow-left"/></svg></button>
+            <button class="position-btn active" data-pos="center" aria-label="居中"><svg><use href="#icon-crosshair"/></svg></button>
+            <button class="position-btn" data-pos="center-right" aria-label="右中"><svg><use href="#icon-arrow-right"/></svg></button>
+            <button class="position-btn" data-pos="bottom-left" aria-label="左下"><svg><use href="#icon-arrow-down"/></svg></button>
+            <button class="position-btn" data-pos="bottom-center" aria-label="下中"><svg><use href="#icon-arrow-down"/></svg></button>
+            <button class="position-btn" data-pos="bottom-right" aria-label="右下"><svg><use href="#icon-arrow-down"/></svg></button>
           </div>
         </div>
       </div>
 
-      <!-- 图片水印设置面板 -->
+      <!-- 图片水印 -->
       <div id="panel-image" class="panel-section" style="display:none;">
         <h3 class="section-title">图片设置</h3>
-
+        <div class="form-group"><label for="wm-image-upload">水印图片</label><input type="file" id="wm-image-upload" accept="image/*" class="file-input-styled"></div>
         <div class="form-group">
-          <label>水印图片</label>
-          <div class="image-upload-row">
-            <input type="file" id="wm-image-upload" accept="image/*" class="file-input-small">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>缩放比例</label>
-          <div class="slider-row">
-            <input type="range" id="wm-image-scale" min="0.05" max="1" step="0.05" value="0.3">
-            <span id="wm-image-scale-val" class="slider-val">30%</span>
-          </div>
+          <label for="wm-image-scale">缩放比例</label>
+          <div class="slider-row"><input type="range" id="wm-image-scale" min="0.05" max="1" step="0.05" value="0.3"><span id="wm-image-scale-val" class="slider-val">30%</span></div>
         </div>
       </div>
 
-      <!-- 平铺模式设置面板 -->
+      <!-- 平铺 -->
       <div id="panel-tile" class="panel-section" style="display:none;">
         <h3 class="section-title">平铺设置</h3>
-
         <div class="form-group">
-          <label>水平间距</label>
-          <div class="slider-row">
-            <input type="range" id="wm-tile-gap-x" min="20" max="500" value="200">
-            <span id="wm-tile-gap-x-val" class="slider-val">200px</span>
-          </div>
+          <label for="wm-tile-gap-x">水平间距</label>
+          <div class="slider-row"><input type="range" id="wm-tile-gap-x" min="20" max="500" value="200"><span id="wm-tile-gap-x-val" class="slider-val">200px</span></div>
         </div>
-
         <div class="form-group">
-          <label>垂直间距</label>
-          <div class="slider-row">
-            <input type="range" id="wm-tile-gap-y" min="20" max="500" value="200">
-            <span id="wm-tile-gap-y-val" class="slider-val">200px</span>
-          </div>
+          <label for="wm-tile-gap-y">垂直间距</label>
+          <div class="slider-row"><input type="range" id="wm-tile-gap-y" min="20" max="500" value="200"><span id="wm-tile-gap-y-val" class="slider-val">200px</span></div>
         </div>
       </div>
 
@@ -205,29 +222,20 @@
       <div class="panel-section">
         <h3 class="section-title">输出格式</h3>
         <div class="radio-group">
-          <label class="radio-label">
-            <input type="radio" name="output-format" value="png" checked>
-            <span>PNG</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="output-format" value="jpeg">
-            <span>JPEG</span>
-          </label>
+          <label class="radio-label"><input type="radio" name="output-format" value="png" checked><span>PNG</span></label>
+          <label class="radio-label"><input type="radio" name="output-format" value="jpeg"><span>JPEG</span></label>
         </div>
-        <div id="quality-group" class="form-group" style="display:none; margin-top: 10px;">
-          <label>JPEG质量</label>
-          <div class="slider-row">
-            <input type="range" id="output-quality" min="0.1" max="1" step="0.05" value="0.92">
-            <span id="output-quality-val" class="slider-val">92%</span>
-          </div>
+        <div id="quality-group" class="form-group" style="display:none; margin-top: 12px;">
+          <label for="output-quality">JPEG 质量</label>
+          <div class="slider-row"><input type="range" id="output-quality" min="0.1" max="1" step="0.05" value="0.92"><span id="output-quality-val" class="slider-val">92%</span></div>
         </div>
       </div>
 
       <hr class="divider">
 
-      <!-- ========== 页边距裁剪 ========== -->
+      <!-- 页边距裁剪 -->
       <div class="panel-section">
-        <div class="section-header-row">
+        <div class="section-header">
           <h3 class="section-title">页边距裁剪</h3>
           <label class="switch-label">
             <input type="checkbox" id="crop-toggle">
@@ -235,60 +243,36 @@
           </label>
         </div>
         <div id="panel-crop" style="display:none;">
-          <div class="radio-group" style="margin-bottom: 8px;">
-            <label class="radio-label">
-              <input type="radio" name="crop-mode" value="manual" checked>
-              <span>手动</span>
-            </label>
-            <label class="radio-label">
-              <input type="radio" name="crop-mode" value="auto">
-              <span>自动检测</span>
-            </label>
+          <div class="radio-group" style="margin-bottom: 10px;">
+            <label class="radio-label"><input type="radio" name="crop-mode" value="manual" checked><span>手动</span></label>
+            <label class="radio-label"><input type="radio" name="crop-mode" value="auto"><span>自动检测</span></label>
           </div>
-          <!-- 手动模式 -->
           <div id="crop-manual">
             <div class="crop-grid">
               <div class="crop-row">
                 <div class="crop-cell empty"></div>
-                <div class="crop-cell">
-                  <input type="number" id="crop-top" class="crop-input" value="0" min="0" step="1">
-                  <span class="crop-label">上</span>
-                </div>
+                <div class="crop-cell"><input type="number" id="crop-top" class="crop-input" value="0" min="0" step="1" aria-label="上边距"><span class="crop-label">上</span></div>
                 <div class="crop-cell empty"></div>
               </div>
               <div class="crop-row">
-                <div class="crop-cell">
-                  <input type="number" id="crop-left" class="crop-input" value="0" min="0" step="1">
-                  <span class="crop-label">左</span>
-                </div>
-                <div class="crop-cell center-icon">✂</div>
-                <div class="crop-cell">
-                  <input type="number" id="crop-right" class="crop-input" value="0" min="0" step="1">
-                  <span class="crop-label">右</span>
-                </div>
+                <div class="crop-cell"><input type="number" id="crop-left" class="crop-input" value="0" min="0" step="1" aria-label="左边距"><span class="crop-label">左</span></div>
+                <div class="crop-cell icon"><svg><use href="#icon-crop"/></svg></div>
+                <div class="crop-cell"><input type="number" id="crop-right" class="crop-input" value="0" min="0" step="1" aria-label="右边距"><span class="crop-label">右</span></div>
               </div>
               <div class="crop-row">
                 <div class="crop-cell empty"></div>
-                <div class="crop-cell">
-                  <input type="number" id="crop-bottom" class="crop-input" value="0" min="0" step="1">
-                  <span class="crop-label">下</span>
-                </div>
+                <div class="crop-cell"><input type="number" id="crop-bottom" class="crop-input" value="0" min="0" step="1" aria-label="下边距"><span class="crop-label">下</span></div>
                 <div class="crop-cell empty"></div>
               </div>
             </div>
           </div>
-          <!-- 自动模式 -->
           <div id="crop-auto" style="display:none;">
-            <div class="form-group">
-              <label>颜色容差</label>
-              <div class="slider-row">
-                <input type="range" id="crop-tolerance" min="0" max="50" value="10">
-                <span id="crop-tolerance-val" class="slider-val">10</span>
-              </div>
-            </div>
-            <button id="btn-auto-detect" class="btn-sm" style="width:100%;">🔍 自动检测边距</button>
+            <div class="form-group"><label for="crop-tolerance">颜色容差</label><div class="slider-row"><input type="range" id="crop-tolerance" min="0" max="50" value="10"><span id="crop-tolerance-val" class="slider-val">10</span></div></div>
+            <button id="btn-auto-detect" class="btn btn-outline" style="width:100%;">
+              <svg class="btn-icon" aria-hidden="true"><use href="#icon-search"/></svg> 自动检测边距
+            </button>
             <div id="auto-crop-result" class="auto-crop-result" style="display:none;">
-              <span class="crop-result-text">检测结果：上<span id="auto-top">0</span>px 下<span id="auto-bottom">0</span>px 左<span id="auto-left">0</span>px 右<span id="auto-right">0</span>px</span>
+              <span class="crop-result-text">上 <span id="auto-top">0</span>px · 下 <span id="auto-bottom">0</span>px · 左 <span id="auto-left">0</span>px · 右 <span id="auto-right">0</span>px</span>
             </div>
           </div>
         </div>
@@ -296,9 +280,9 @@
 
       <hr class="divider">
 
-      <!-- ========== 自定义尺寸 ========== -->
+      <!-- 自定义尺寸 -->
       <div class="panel-section">
-        <div class="section-header-row">
+        <div class="section-header">
           <h3 class="section-title">自定义尺寸</h3>
           <label class="switch-label">
             <input type="checkbox" id="resize-toggle">
@@ -306,37 +290,28 @@
           </label>
         </div>
         <div id="panel-resize" style="display:none;">
-          <div class="preset-buttons">
-            <button class="btn-preset" data-w="1920" data-h="1080">1080p</button>
-            <button class="btn-preset" data-w="2560" data-h="1440">2K</button>
-            <button class="btn-preset" data-w="2480" data-h="3508">A4@300dpi</button>
-            <button class="btn-preset" data-w="1080" data-h="1920">竖屏1080</button>
+          <div class="preset-chips">
+            <button class="preset-chip" data-w="1920" data-h="1080">1080p</button>
+            <button class="preset-chip" data-w="2560" data-h="1440">2K</button>
+            <button class="preset-chip" data-w="2480" data-h="3508">A4 @300dpi</button>
+            <button class="preset-chip" data-w="1080" data-h="1920">竖屏 1080</button>
           </div>
           <div class="dimension-row">
-            <div class="dimension-input-group">
-              <label>宽度</label>
-              <input type="number" id="resize-width" class="text-input" value="1920" min="1" step="1">
-            </div>
+            <div class="dimension-group"><label for="resize-width">宽度</label><input type="number" id="resize-width" class="text-input" value="1920" min="1"></div>
             <span class="dimension-sep">×</span>
-            <div class="dimension-input-group">
-              <label>高度</label>
-              <input type="number" id="resize-height" class="text-input" value="1080" min="1" step="1">
-            </div>
+            <div class="dimension-group"><label for="resize-height">高度</label><input type="number" id="resize-height" class="text-input" value="1080" min="1"></div>
           </div>
-          <div class="form-group" style="margin-top: 6px;">
-            <label class="checkbox-label">
-              <input type="checkbox" id="resize-keep-aspect" checked>
-              <span>保持原始比例（居中适配）</span>
-            </label>
+          <div class="form-group" style="margin-top: 8px;">
+            <label class="checkbox-label"><input type="checkbox" id="resize-keep-aspect" checked><span>保持原始比例（居中适配）</span></label>
           </div>
         </div>
       </div>
 
       <hr class="divider">
 
-      <!-- ========== 页码叠加 ========== -->
+      <!-- 页码叠加 -->
       <div class="panel-section">
-        <div class="section-header-row">
+        <div class="section-header">
           <h3 class="section-title">页码叠加</h3>
           <label class="switch-label">
             <input type="checkbox" id="pagenum-toggle">
@@ -344,86 +319,53 @@
           </label>
         </div>
         <div id="panel-pagenum" style="display:none;">
-          <div class="form-group">
-            <label>格式</label>
-            <input type="text" id="pagenum-format" class="text-input" value="{page} / {total}" placeholder="{page} / {total}">
-          </div>
-          <div class="form-group">
-            <label>字体大小</label>
-            <div class="slider-row">
-              <input type="range" id="pagenum-font-size" min="12" max="120" value="30">
-              <span id="pagenum-font-size-val" class="slider-val">30px</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>颜色</label>
-            <input type="color" id="pagenum-color" value="#333333" class="color-input">
-          </div>
-          <div class="form-group">
-            <label>透明度</label>
-            <div class="slider-row">
-              <input type="range" id="pagenum-opacity" min="0" max="1" step="0.05" value="0.8">
-              <span id="pagenum-opacity-val" class="slider-val">80%</span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>位置</label>
-            <div class="position-grid" id="pagenum-position-grid">
-              <button class="position-btn" data-pos="top-left">↖</button>
-              <button class="position-btn" data-pos="top-center">↑</button>
-              <button class="position-btn" data-pos="top-right">↗</button>
-              <button class="position-btn" data-pos="center-left">←</button>
-              <button class="position-btn" data-pos="center">⊙</button>
-              <button class="position-btn" data-pos="center-right">→</button>
-              <button class="position-btn" data-pos="bottom-left">↙</button>
-              <button class="position-btn active" data-pos="bottom-center">↓</button>
-              <button class="position-btn" data-pos="bottom-right">↘</button>
-            </div>
-          </div>
+          <div class="form-group"><label for="pagenum-format">格式</label><input type="text" id="pagenum-format" class="text-input" value="{page} / {total}" placeholder="{page} / {total}"></div>
+          <div class="form-group"><label for="pagenum-font-size">字体大小</label><div class="slider-row"><input type="range" id="pagenum-font-size" min="12" max="120" value="30"><span id="pagenum-font-size-val" class="slider-val">30px</span></div></div>
+          <div class="form-group"><label for="pagenum-color">颜色</label><input type="color" id="pagenum-color" value="#333333" class="color-input"></div>
+          <div class="form-group"><label for="pagenum-opacity">透明度</label><div class="slider-row"><input type="range" id="pagenum-opacity" min="0" max="1" step="0.05" value="0.8"><span id="pagenum-opacity-val" class="slider-val">80%</span></div></div>
+          <div class="form-group"><label>位置</label><div class="position-grid" id="pagenum-position-grid">
+            <button class="position-btn" data-pos="top-left" aria-label="左上"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="top-center" aria-label="上中"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="top-right" aria-label="右上"><svg><use href="#icon-arrow-up"/></svg></button>
+            <button class="position-btn" data-pos="center-left" aria-label="左中"><svg><use href="#icon-arrow-left"/></svg></button>
+            <button class="position-btn" data-pos="center" aria-label="居中"><svg><use href="#icon-crosshair"/></svg></button>
+            <button class="position-btn" data-pos="center-right" aria-label="右中"><svg><use href="#icon-arrow-right"/></svg></button>
+            <button class="position-btn" data-pos="bottom-left" aria-label="左下"><svg><use href="#icon-arrow-down"/></svg></button>
+            <button class="position-btn active" data-pos="bottom-center" aria-label="下中"><svg><use href="#icon-arrow-down"/></svg></button>
+            <button class="position-btn" data-pos="bottom-right" aria-label="右下"><svg><use href="#icon-arrow-down"/></svg></button>
+          </div></div>
         </div>
       </div>
 
       <hr class="divider">
 
-      <!-- 下载按钮区域 -->
-      <div class="panel-section" id="download-section" style="display:none;">
+      <!-- 下载按钮 -->
+      <div class="panel-section download-buttons" id="download-section" style="display:none;">
         <button id="btn-download-current" class="btn btn-primary">
-          ⬇ 下载当前页
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-download"/></svg> 下载当前页
         </button>
-        <button id="btn-download-pdf" class="btn btn-primary-outline">
-          📑 导出 PDF
+        <button id="btn-download-pdf" class="btn btn-outline">
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-file-text"/></svg> 导出 PDF
         </button>
-        <button id="btn-download-all" class="btn btn-secondary">
-          📦 下载全部选中 (ZIP)
+        <button id="btn-download-all" class="btn btn-ghost">
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-zip"/></svg> 下载全部 (ZIP)
         </button>
       </div>
 
     </aside>
 
-    <!-- ========== 文档分割 右侧面板 ========== -->
-    <aside id="panel-splitter" class="right-panel" style="display:none;">
+    <!-- ====== 文档分割右侧面板 ====== -->
+    <aside id="panel-splitter" class="right-panel" style="display:none;" aria-label="文档分割">
 
       <div class="panel-section">
         <h3 class="section-title">输出格式</h3>
         <div class="radio-group">
-          <label class="radio-label">
-            <input type="radio" name="split-output-format" value="pdf" checked>
-            <span>PDF</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="split-output-format" value="docx">
-            <span>DOCX</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="split-output-format" value="png">
-            <span>PNG</span>
-          </label>
-          <label class="radio-label">
-            <input type="radio" name="split-output-format" value="jpeg">
-            <span>JPEG</span>
-          </label>
+          <label class="radio-label"><input type="radio" name="split-output-format" value="pdf" checked><span>PDF</span></label>
+          <label class="radio-label"><input type="radio" name="split-output-format" value="docx"><span>DOCX</span></label>
+          <label class="radio-label"><input type="radio" name="split-output-format" value="png"><span>PNG</span></label>
+          <label class="radio-label"><input type="radio" name="split-output-format" value="jpeg"><span>JPEG</span></label>
         </div>
-        <p id="split-docx-note" style="display:none; font-size:0.7rem; color:var(--text-muted);margin-top:6px;">
+        <p id="split-docx-note" style="display:none; font-size:0.8rem; color:var(--text-muted); margin-top:8px;">
           DOCX 格式需提取文本，生成可编辑的 Word 文档
         </p>
       </div>
@@ -433,106 +375,93 @@
       <div class="panel-section">
         <h3 class="section-title">页面范围</h3>
         <div class="form-group">
-          <label>分组范围（每组一个文件）</label>
+          <label for="split-range-input">分组范围（逗号分隔，每组一个文件）</label>
           <input type="text" id="split-range-input" class="text-input" placeholder="如 1-10  或  1-5, 8-12, 15-20">
         </div>
-        <div style="margin-top: 6px;">
-          <label class="checkbox-label">
-            <input type="checkbox" id="split-remainder-cb" checked>
-            <span>剩余未选页面单独打包为一个文件</span>
-          </label>
-        </div>
-        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:6px;">
-          每个逗号分隔的范围生成一个文件，页码范围可多页
-        </p>
+        <label class="checkbox-label" style="margin-top: 8px;">
+          <input type="checkbox" id="split-remainder-cb" checked>
+          <span>剩余未选页面单独打包</span>
+        </label>
+        <p class="hint-text" style="margin-top: 8px;">每个逗号分隔的范围生成一个文件</p>
       </div>
 
       <hr class="divider">
 
       <div class="panel-section">
-        <button id="btn-split-document" class="btn btn-primary">
-          ✂️ 分割文档
+        <button id="btn-split-document" class="btn btn-primary" style="width:100%;">
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-scissors"/></svg> 分割文档
         </button>
       </div>
 
     </aside>
   </div>
 
-  <!-- ========== 图片分割工作区 ========== -->
+  <!-- ====== 图片分割工作区 ====== -->
   <div id="cut-workspace" class="cut-workspace" style="display:none;">
 
-    <!-- 拖拽上传区 -->
-    <div id="cut-drop-zone" class="cut-drop-zone">
-      <div class="cut-icon">🖼️</div>
+    <div id="cut-drop-zone" class="cut-drop-zone" role="button" tabindex="0" aria-label="拖放图片或点击浏览">
+      <svg class="cut-upload-icon" aria-hidden="true"><use href="#icon-image"/></svg>
       <p>拖放图片到这里，或 <span class="cut-browse">点击浏览</span></p>
       <input type="file" id="cut-file-input" accept="image/*" hidden>
     </div>
 
-    <!-- 信息栏 -->
     <div id="cut-info-bar" class="cut-info-bar"></div>
 
-    <!-- 画布 -->
     <div class="cut-canvas-wrapper">
       <canvas id="cut-canvas"></canvas>
     </div>
 
-    <!-- 控制栏 -->
     <div class="cut-controls" id="cut-controls" style="display:none;">
       <div class="cut-btn-group" id="cut-direction-group">
-        <button data-dir="vertical" class="active">⬌ 左右分</button>
-        <button data-dir="horizontal">⬍ 上下分</button>
+        <button data-dir="vertical" class="active">
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-arrow-left"/></svg>
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-arrow-right"/></svg> 左右分
+        </button>
+        <button data-dir="horizontal">
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-arrow-up"/></svg>
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-arrow-down"/></svg> 上下分
+        </button>
       </div>
 
       <div class="cut-slider-group">
         <label for="cut-split-slider">分割位置</label>
         <input type="range" id="cut-split-slider" min="5" max="95" value="50" step="1">
-        <span class="value" id="cut-split-value">50%</span>
+        <span class="cut-slider-value" id="cut-split-value">50%</span>
       </div>
 
-      <button class="cut-btn cut-btn-download" id="cut-btn-download">⬇ 下载两部分</button>
-      <button class="cut-btn cut-btn-reset" id="cut-btn-reset">↺ 重新选择</button>
+      <button class="cut-btn cut-btn-primary" id="cut-btn-download">
+        <svg class="btn-icon" aria-hidden="true"><use href="#icon-download"/></svg> 下载两部分
+      </button>
+      <button class="cut-btn cut-btn-ghost" id="cut-btn-reset">
+        <svg class="btn-icon" aria-hidden="true"><use href="#icon-refresh"/></svg> 重新选择
+      </button>
     </div>
 
-    <!-- 水印设置面板 -->
+    <!-- 水印面板 -->
     <div id="cut-watermark-section" class="cut-watermark-section" style="display:none;">
-      <label class="switch-label" style="justify-content: flex-start;">
+      <label class="switch-label">
+        <span class="switch-text">启用水印</span>
         <input type="checkbox" id="cut-wm-toggle">
         <span class="switch-track"><span class="switch-thumb"></span></span>
-        <span class="switch-text">启用水印</span>
       </label>
 
       <div id="cut-watermark-panel" class="cut-watermark-panel" style="display:none;">
-        <div class="form-group">
-          <label>文字内容</label>
-          <input type="text" id="cut-wm-text" value="机密文件" class="text-input">
+        <div class="form-group"><label for="cut-wm-text">文字内容</label><input type="text" id="cut-wm-text" value="机密文件" class="text-input"></div>
+        <div class="cut-wm-row">
+          <div class="form-group flex-1">
+            <label for="cut-wm-font-size">字体大小</label>
+            <div class="slider-row"><input type="range" id="cut-wm-font-size" min="12" max="120" value="36"><span id="cut-wm-font-size-val" class="slider-val">36px</span></div>
+          </div>
+          <div class="form-group flex-shrink"><label for="cut-wm-color">颜色</label><input type="color" id="cut-wm-color" value="#000000" class="color-input"></div>
         </div>
         <div class="cut-wm-row">
-          <div class="form-group" style="flex:1;">
-            <label>字体大小</label>
-            <div class="slider-row">
-              <input type="range" id="cut-wm-font-size" min="12" max="120" value="36">
-              <span id="cut-wm-font-size-val" class="slider-val">36px</span>
-            </div>
+          <div class="form-group flex-1">
+            <label for="cut-wm-opacity">透明度</label>
+            <div class="slider-row"><input type="range" id="cut-wm-opacity" min="0" max="1" step="0.05" value="0.3"><span id="cut-wm-opacity-val" class="slider-val">30%</span></div>
           </div>
-          <div class="form-group" style="flex:0 0 auto;">
-            <label>颜色</label>
-            <input type="color" id="cut-wm-color" value="#000000" class="color-input">
-          </div>
-        </div>
-        <div class="cut-wm-row">
-          <div class="form-group" style="flex:1;">
-            <label>透明度</label>
-            <div class="slider-row">
-              <input type="range" id="cut-wm-opacity" min="0" max="1" step="0.05" value="0.3">
-              <span id="cut-wm-opacity-val" class="slider-val">30%</span>
-            </div>
-          </div>
-          <div class="form-group" style="flex:1;">
-            <label>旋转角度</label>
-            <div class="slider-row">
-              <input type="range" id="cut-wm-rotation" min="-90" max="90" value="45">
-              <span id="cut-wm-rotation-val" class="slider-val">45°</span>
-            </div>
+          <div class="form-group flex-1">
+            <label for="cut-wm-rotation">旋转角度</label>
+            <div class="slider-row"><input type="range" id="cut-wm-rotation" min="-90" max="90" value="45"><span id="cut-wm-rotation-val" class="slider-val">45°</span></div>
           </div>
         </div>
       </div>
@@ -541,95 +470,84 @@
     <!-- 预览卡片 -->
     <div class="cut-previews" id="cut-previews" style="display:none;">
       <div class="cut-preview-card">
-        <div class="label">第一部分</div>
-        <img id="cut-preview-a" alt="预览 A">
-        <div class="size" id="cut-size-a"></div>
+        <div class="cut-preview-label">第一部分</div>
+        <img id="cut-preview-a" alt="左半部分预览">
+        <div class="cut-preview-size" id="cut-size-a"></div>
       </div>
       <div class="cut-preview-card">
-        <div class="label">第二部分</div>
-        <img id="cut-preview-b" alt="预览 B">
-        <div class="size" id="cut-size-b"></div>
+        <div class="cut-preview-label">第二部分</div>
+        <img id="cut-preview-b" alt="右半部分预览">
+        <div class="cut-preview-size" id="cut-size-b"></div>
       </div>
     </div>
 
-    <!-- Toast -->
-    <div class="cut-toast" id="cut-toast"></div>
+    <div class="cut-toast" id="cut-toast" role="status" aria-live="polite"></div>
   </div>
 
-  <!-- ========== 数字工具工作区 ========== -->
+  <!-- ====== 数字工具工作区 ====== -->
   <div id="number-workspace" class="number-workspace" style="display:none;">
 
-    <!-- 头部 -->
     <div class="num-header">
-      <div class="num-sub">中文大写转换 · 计算器</div>
+      <p class="num-sub">中文大写转换 · 计算器</p>
     </div>
 
-    <!-- 子标签 -->
     <div class="num-tabs">
-      <button class="num-tab-btn active" data-num-tab="calc">🧮 计算器</button>
-      <button class="num-tab-btn" data-num-tab="toChinese">🔤 数字 → 中文</button>
-      <button class="num-tab-btn" data-num-tab="fromChinese">🔢 中文 → 数字</button>
+      <button class="num-tab-btn active" data-num-tab="calc">
+        <svg class="tab-icon" aria-hidden="true"><use href="#icon-calculator"/></svg> 计算器
+      </button>
+      <button class="num-tab-btn" data-num-tab="toChinese">
+        <svg class="tab-icon" aria-hidden="true"><use href="#icon-type"/></svg> 数字 → 中文
+      </button>
+      <button class="num-tab-btn" data-num-tab="fromChinese">
+        <svg class="tab-icon" aria-hidden="true"><use href="#icon-type"/></svg> 中文 → 数字
+      </button>
     </div>
 
-    <!-- ===== 子面板：计算器 ===== -->
+    <!-- 计算器 -->
     <div class="num-tab-content active" id="num-tab-calc">
       <div class="num-calc-display">
         <div class="num-calc-expr" id="num-calc-expr">&nbsp;</div>
         <div class="num-calc-val" id="num-calc-val">0</div>
       </div>
-
       <div class="num-calc-pad" id="num-calc-pad">
         <button class="num-calc-btn num-fn" data-action="clear">C</button>
         <button class="num-calc-btn num-fn" data-action="backspace">⌫</button>
         <button class="num-calc-btn num-op" data-action="op" data-val="(">(</button>
         <button class="num-calc-btn num-op" data-action="op" data-val=")">)</button>
-
         <button class="num-calc-btn" data-action="digit" data-val="7">7</button>
         <button class="num-calc-btn" data-action="digit" data-val="8">8</button>
         <button class="num-calc-btn" data-action="digit" data-val="9">9</button>
         <button class="num-calc-btn num-op" data-action="op" data-val="/">÷</button>
-
         <button class="num-calc-btn" data-action="digit" data-val="4">4</button>
         <button class="num-calc-btn" data-action="digit" data-val="5">5</button>
         <button class="num-calc-btn" data-action="digit" data-val="6">6</button>
         <button class="num-calc-btn num-op" data-action="op" data-val="*">×</button>
-
         <button class="num-calc-btn" data-action="digit" data-val="1">1</button>
         <button class="num-calc-btn" data-action="digit" data-val="2">2</button>
         <button class="num-calc-btn" data-action="digit" data-val="3">3</button>
         <button class="num-calc-btn num-op" data-action="op" data-val="-">−</button>
-
         <button class="num-calc-btn num-op" data-action="op" data-val="%">%</button>
         <button class="num-calc-btn" data-action="digit" data-val="0">0</button>
         <button class="num-calc-btn" data-action="digit" data-val=".">.</button>
         <button class="num-calc-btn num-op" data-action="op" data-val="+">+</button>
-
         <button class="num-calc-btn num-span2" data-action="digit" data-val="00">00</button>
         <button class="num-calc-btn num-eq num-span2" data-action="eq">=</button>
       </div>
-
-      <div class="num-result-area" id="num-calc-results">
-        <div class="num-result-empty">点击数字和运算符进行计算，结果显示在下方</div>
-      </div>
+      <div class="num-result-area" id="num-calc-results"><div class="num-result-empty">点击数字和运算符进行计算</div></div>
     </div>
 
-    <!-- ===== 子面板：数字 → 中文 ===== -->
+    <!-- 数字 → 中文 -->
     <div class="num-tab-content" id="num-tab-toChinese">
       <div class="num-input-group">
         <label for="num-num-input">输入数字或表达式</label>
         <div class="num-input-row">
           <input type="text" id="num-num-input" placeholder="例如：123.45  或  100+200  (8+2)×50" autocomplete="off">
-          <button class="num-btn num-btn-primary" id="num-convert-btn">转换</button>
+          <button class="num-btn-primary" id="num-convert-btn">转换</button>
         </div>
       </div>
-
-      <label class="num-toggle-row">
-        <input type="checkbox" id="num-financial-cb">
-        <span>金融格式（元角分整）</span>
-      </label>
-
+      <label class="num-toggle-row"><input type="checkbox" id="num-financial-cb"><span>金融格式（元角分整）</span></label>
       <div class="num-examples">
-        <span style="font-size:0.75rem;color:var(--text-muted);line-height:2">示例：</span>
+        <span class="num-examples-label">示例：</span>
         <span class="num-example-chip" data-num="123.45">123.45</span>
         <span class="num-example-chip" data-num="100+200">100+200</span>
         <span class="num-example-chip" data-num="(8+2)×50">(8+2)×50</span>
@@ -637,58 +555,53 @@
         <span class="num-example-chip" data-num="10020">10020</span>
         <span class="num-example-chip" data-num="-9876.54">-9876.54</span>
       </div>
-
-      <div class="num-result-area" id="num-to-chinese-results">
-        <div class="num-result-empty">输入数字后点击"转换"查看中文写法</div>
-      </div>
+      <div class="num-result-area" id="num-to-chinese-results"><div class="num-result-empty">输入数字后点击"转换"查看中文写法</div></div>
     </div>
 
-    <!-- ===== 子面板：中文 → 数字 ===== -->
+    <!-- 中文 → 数字 -->
     <div class="num-tab-content" id="num-tab-fromChinese">
       <div class="num-input-group">
         <label for="num-chinese-input">输入中文数字</label>
         <div class="num-input-row">
           <input type="text" id="num-chinese-input" placeholder="例如：一千二百三十四万五千六百七十八" autocomplete="off">
-          <button class="num-btn num-btn-primary" id="num-chinese-convert-btn">转换</button>
+          <button class="num-btn-primary" id="num-chinese-convert-btn">转换</button>
         </div>
       </div>
-
       <div class="num-examples">
-        <span style="font-size:0.75rem;color:var(--text-muted);line-height:2">示例：</span>
+        <span class="num-examples-label">示例：</span>
         <span class="num-example-chip" data-cn="一千二百三十四万五千六百七十八">大写数字</span>
         <span class="num-example-chip" data-cn="壹佰贰拾叁元肆角伍分">金融大写</span>
         <span class="num-example-chip" data-cn="一亿零一">含零</span>
         <span class="num-example-chip" data-cn="负十万">负数</span>
         <span class="num-example-chip" data-cn="三点一四">小数</span>
       </div>
-
-      <div class="num-result-area" id="num-from-chinese-results">
-        <div class="num-result-empty">输入中文数字后点击"转换"查看阿拉伯数字</div>
-      </div>
+      <div class="num-result-area" id="num-from-chinese-results"><div class="num-result-empty">输入中文数字后点击"转换"查看阿拉伯数字</div></div>
     </div>
 
     <div class="num-footer">支持大写（壹贰叁…）和小写（一二三…）· 数字 ≤ 10¹⁶</div>
   </div>
 
   <!-- 图片放大灯箱 -->
-  <div id="lightbox" class="lightbox" style="display:none;">
-    <span id="lightbox-close" class="lightbox-close">×</span>
+  <div id="lightbox" class="lightbox" style="display:none;" role="dialog" aria-label="图片预览" aria-hidden="true">
+    <button id="lightbox-close" class="lightbox-close" aria-label="关闭预览">
+      <svg class="lightbox-close-icon" aria-hidden="true"><use href="#icon-x"/></svg>
+    </button>
     <img id="lightbox-img" src="" alt="预览大图">
   </div>
 
-  <!-- 心跳: 页面关闭后服务器自动退出 -->
+  <!-- 心跳 -->
   <script>
     setInterval(() => { fetch('/heartbeat').catch(()=>{}) }, 3000);
   </script>
 
-  <!-- ========== 本地库文件 ========== -->
+  <!-- 库文件 -->
   <script src="lib/pdf.min.js"></script>
   <script src="lib/jszip.min.js"></script>
   <script src="lib/jspdf.umd.min.js"></script>
   <script src="lib/html2canvas.min.js"></script>
   <script src="lib/mammoth.browser.min.js"></script>
 
-  <!-- ========== 应用模块 ========== -->
+  <!-- 应用模块 -->
   <script src="js/pdf-renderer.js"></script>
   <script src="js/watermark.js"></script>
   <script src="js/page-processor.js"></script>
