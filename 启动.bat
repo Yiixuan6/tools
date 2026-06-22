@@ -1,3 +1,4 @@
 @echo off
 cd /d "%~dp0"
-powershell -ExecutionPolicy Bypass -File ".\start.ps1"
+python server.py 60000
+pause

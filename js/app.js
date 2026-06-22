@@ -8,7 +8,8 @@ const App = {
     pdf:    { modes: ['pdf', 'pdfsplit'], default: 'pdf' },
     word:   { modes: ['word'],            default: 'word' },
     image:  { modes: ['photo', 'cut'],    default: 'photo' },
-    tools:  { modes: ['number'],          default: 'number' },
+    tools:   { modes: ['number'],          default: 'number' },
+    convert: { modes: ['convert'],         default: 'convert' },
   },
 
   /** 根据 mode 反查所属 category */
@@ -191,18 +192,21 @@ const App = {
       photo: '🖼️ 图片 + 水印',
       cut: '✂️ 图片分割',
       number: '🔢 数字工具',
+      convert: '📝 转MD — 文件/网页 → Markdown',
     };
     document.getElementById('app-title').textContent = titles[mode] || titles.pdf;
 
-    // cut / number 模式：显示专用工作区，隐藏常规布局
+    // cut / number / convert 模式：显示专用工作区，隐藏常规布局
     const mainLayout = document.querySelector('.main-layout');
     const cutWorkspace = document.getElementById('cut-workspace');
     const numberWorkspace = document.getElementById('number-workspace');
+    const convertWorkspace = document.getElementById('convert-workspace');
 
     // 先全部隐藏
     mainLayout.style.display = '';
     cutWorkspace.style.display = 'none';
     if (numberWorkspace) numberWorkspace.style.display = 'none';
+    if (convertWorkspace) convertWorkspace.style.display = 'none';
 
     if (mode === 'cut') {
       mainLayout.style.display = 'none';
@@ -216,6 +220,17 @@ const App = {
         if (!numberWorkspace.classList.contains('visible')) {
           numberWorkspace.classList.add('visible');
           NumberTool.init();
+        }
+      }
+      return;
+    }
+    if (mode === 'convert') {
+      mainLayout.style.display = 'none';
+      if (convertWorkspace) {
+        convertWorkspace.style.display = 'flex';
+        if (!convertWorkspace.classList.contains('visible')) {
+          convertWorkspace.classList.add('visible');
+          MarkitdownConverter.init();
         }
       }
       return;
@@ -234,8 +249,8 @@ const App = {
 
   _updateUploadArea() {
     const mode = this.state.mode;
-    // cut / number 模式有自己的上传区
-    if (mode === 'cut' || mode === 'number') return;
+    // cut / number / convert 模式有自己的上传区
+    if (mode === 'cut' || mode === 'number' || mode === 'convert') return;
 
     const fileInput = document.getElementById('file-input');
     const hint = document.getElementById('upload-hint');
@@ -247,8 +262,8 @@ const App = {
         hint.textContent = '点击选择PDF文件 或 拖拽到此处';
         break;
       case 'word':
-        fileInput.accept = '.docx';
-        hint.textContent = '点击选择Word文件(.docx) 或 拖拽到此处 | .doc请先用转换脚本';
+        fileInput.accept = '.docx,.doc';
+        hint.textContent = '点击选择Word文件(.docx/.doc) 或 拖拽到此处';
         break;
       case 'photo':
         fileInput.accept = 'image/*';
@@ -500,6 +515,30 @@ const App = {
     }
   },
 
+  // ========== 进度条工具 ==========
+  _showProgress(label) {
+    const el = document.getElementById('upload-progress');
+    el.classList.add('visible');
+    document.getElementById('upload-progress-label').textContent = label;
+    this._setProgress(0);
+  },
+  _setProgress(pct) {
+    document.getElementById('upload-progress-fill').style.width = pct + '%';
+    document.getElementById('upload-progress-pct').textContent = Math.round(pct) + '%';
+  },
+  _setProgressIndeterminate(label) {
+    const el = document.getElementById('upload-progress');
+    el.classList.add('visible');
+    document.getElementById('upload-progress-label').textContent = label;
+    document.getElementById('upload-progress-fill').classList.add('indeterminate');
+    document.getElementById('upload-progress-pct').textContent = '';
+  },
+  _hideProgress() {
+    document.getElementById('upload-progress').classList.remove('visible');
+    document.getElementById('upload-progress-fill').classList.remove('indeterminate');
+    document.getElementById('upload-progress-fill').style.width = '0%';
+  },
+
   async _loadMultipleFiles(files) {
     const mode = this.state.mode;
 
@@ -553,44 +592,62 @@ const App = {
     document.getElementById('upload-area').classList.add('loading');
     document.getElementById('upload-hint').textContent = `正在加载 ${imgFiles.length} 张图片...`;
 
+    this._showProgress('正在加载图片');
     for (let i = 0; i < imgFiles.length; i++) {
       document.getElementById('upload-hint').textContent = `正在加载 (${i + 1}/${imgFiles.length}): ${imgFiles[i].name}`;
       try {
         await this._loadOneImage(imgFiles[i]);
+        this._setProgress(((i + 1) / imgFiles.length) * 100);
       } catch (err) {
         console.error(`加载 ${imgFiles[i].name} 失败:`, err);
       }
     }
+    this._hideProgress();
 
     document.getElementById('upload-area').classList.remove('loading');
     const totalFiles = this.state.fileList.length;
-    const totalPages = this.state.fileList.reduce((sum, f) => sum + f.pageCount, 0);
     document.getElementById('upload-hint').textContent = `已加载 ${totalFiles} 张图片`;
     document.getElementById('file-name').textContent = '';
 
     this._updateUI();
   },
 
-  /** Word 模式：.docx → Canvas 页面 */
+  /** Word 模式：.doc / .docx → Canvas 页面 */
   async _loadWordFiles(files) {
-    const docxFiles = files.filter((f) =>
-      f.name.toLowerCase().endsWith('.docx') ||
-      f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    if (docxFiles.length === 0) {
-      document.getElementById('upload-hint').textContent = '仅支持 .docx。旧版 .doc 请先用「转换doc.ps1」转为 .docx';
+    const wordFiles = files.filter((f) => {
+      const n = f.name.toLowerCase();
+      return n.endsWith('.docx') || n.endsWith('.doc') ||
+        f.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+        f.type === 'application/msword';
+    });
+    if (wordFiles.length === 0) {
+      document.getElementById('upload-hint').textContent = '未找到 Word 文档（支持 .docx / .doc）';
       return;
     }
 
     document.getElementById('upload-area').classList.add('loading');
 
-    for (let i = 0; i < docxFiles.length; i++) {
-      document.getElementById('upload-hint').textContent = `正在转换 (${i + 1}/${docxFiles.length}): ${docxFiles[i].name}`;
+    for (let i = 0; i < wordFiles.length; i++) {
+      const f = wordFiles[i];
+      const sizeMB = (f.size / 1024 / 1024).toFixed(1);
+      document.getElementById('upload-hint').textContent = `正在处理 (${i + 1}/${wordFiles.length}): ${f.name} (${sizeMB}MB)`;
+
       try {
-        await this._loadOneDocx(docxFiles[i]);
+        // All Word files → server-side conversion (fast, no browser freeze)
+        let fileToLoad = f;
+
+        if (f.name.toLowerCase().endsWith('.doc') && !f.name.toLowerCase().endsWith('.docx')) {
+          this._setProgressIndeterminate(`正在转换 .doc → .docx: ${f.name}`);
+          fileToLoad = await this._convertDocToDocx(f);
+        }
+
+        this._setProgressIndeterminate(`服务端转换中: ${fileToLoad.name}`);
+        await this._loadWordFromServer(fileToLoad);
       } catch (err) {
-        console.error(`转换 ${docxFiles[i].name} 失败:`, err);
-        document.getElementById('upload-hint').textContent = `转换失败: ${docxFiles[i].name}`;
+        console.error(`处理 ${f.name} 失败:`, err);
+        document.getElementById('upload-hint').textContent = `处理失败: ${f.name} - ${err.message}`;
       }
+      this._hideProgress();
     }
 
     document.getElementById('upload-area').classList.remove('loading');
@@ -600,6 +657,79 @@ const App = {
     document.getElementById('file-name').textContent = '';
 
     this._updateUI();
+  },
+
+  /** 服务端转换 Word → PDF → PDF.js 渲染（保留全部格式） */
+  async _loadWordFromServer(file) {
+    // Step 1: Upload to server, convert to PDF via LibreOffice
+    this._showProgress(`正在转换: ${file.name}`);
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const resp = await fetch('/api/convert/docx-to-pdf', { method: 'POST', body: formData });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || `转换失败 (${resp.status})`);
+    }
+
+    // Step 2: Get PDF, render with PDF.js
+    this._setProgress(80, '正在渲染页面...');
+    const pdfBlob = await resp.blob();
+    const pdfFile = new File([pdfBlob], file.name.replace(/\.(docx?|doc)$/i, '.pdf'), { type: 'application/pdf' });
+
+    // Step 3: Use PDFRenderer to load and render (same as PDF tab)
+    const fileId = `wordpdf_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const info = await PDFRenderer.load(pdfFile, fileId);
+    const baseName = file.name.replace(/\.(docx?|doc)$/i, '');
+    const thumbs = [];
+
+    this._setProgress(85, `正在生成缩略图 (${info.numPages} 页)...`);
+    for (let i = 1; i <= info.numPages; i++) {
+      thumbs.push(await PDFRenderer.createThumbnail(i, 160));
+      this._setProgress(85 + ((i / info.numPages) * 10));
+    }
+
+    const arrayBuffer = info.arrayBuffer;
+
+    const selectedPages = new Set();
+    for (let pi = 1; pi <= info.numPages; pi++) selectedPages.add(pi);
+
+    const fileEntry = {
+      name: file.name,
+      baseName: baseName,
+      pages: new Array(info.numPages).fill(null),  // lazy render
+      thumbs: thumbs,
+      selectedPages: selectedPages,
+      pageCount: info.numPages,
+      fileId: fileId,
+      _arrayBuffer: arrayBuffer,
+    };
+
+    this.state.fileList.push(fileEntry);
+    this._hideProgress();
+
+    if (this.state.fileList.length === 1) {
+      this.state.currentFileIndex = 0;
+      this._buildFileTabs();
+      this._buildThumbnailList();
+      await this._showPage(1);
+      this._updateRangeInput();
+    } else {
+      this._buildFileTabs();
+    }
+  },
+
+  /** 通过服务端 LibreOffice 将 .doc 转为 .docx */
+  async _convertDocToDocx(docFile) {
+    const formData = new FormData();
+    formData.append('file', docFile, docFile.name);
+    const resp = await fetch('/api/convert/doc-to-docx', { method: 'POST', body: formData });
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error || `服务器转换失败 (${resp.status})`);
+    }
+    const blob = await resp.blob();
+    const docxName = docFile.name.replace(/\.doc$/i, '.docx');
+    return new File([blob], docxName, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   },
 
   /** 加载单张图片 */
@@ -644,55 +774,6 @@ const App = {
     }
   },
 
-  /** 加载单个 .docx 并转为页面 */
-  async _loadOneDocx(file) {
-    const { canvases, pageHtmls } = await WordConverter.convert(file);
-
-    if (!canvases || canvases.length === 0) {
-      throw new Error('Word 文档转换后无页面内容');
-    }
-
-    const baseName = file.name.replace(/\.docx$/i, '');
-    const thumbs = [];
-
-    // 生成缩略图
-    for (const canvas of canvases) {
-      const thumbHeight = 160;
-      const thumbScale = thumbHeight / canvas.height;
-      const thumb = document.createElement('canvas');
-      thumb.width = canvas.width * thumbScale;
-      thumb.height = thumbHeight;
-      thumb.getContext('2d').drawImage(canvas, 0, 0, thumb.width, thumb.height);
-      thumbs.push(thumb);
-    }
-
-    const selectedPages = new Set();
-    for (let i = 1; i <= canvases.length; i++) selectedPages.add(i);
-
-    const fileEntry = {
-      name: file.name,
-      baseName: baseName,
-      pages: canvases,
-      thumbs: thumbs,
-      selectedPages: selectedPages,
-      pageCount: canvases.length,
-      fileId: `docx_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-      _arrayBuffer: null,
-      _pageHtmls: pageHtmls || [],  // 每页的原始 HTML 片段（用于 DOCX 输出）
-    };
-
-    this.state.fileList.push(fileEntry);
-
-    if (this.state.fileList.length === 1) {
-      this.state.currentFileIndex = 0;
-      this._buildFileTabs();
-      this._buildThumbnailList();
-      await this._showPage(1);
-    } else {
-      this._buildFileTabs();
-    }
-  },
-
   /** File → Image */
   _readFileAsImage(file) {
     return new Promise((resolve, reject) => {
@@ -715,9 +796,12 @@ const App = {
     const thumbs = [];
 
     // 只渲染缩略图（快速），全分辨率页面按需渲染
+    this._showProgress(`正在生成缩略图: ${file.name}`);
     for (let i = 1; i <= info.numPages; i++) {
       thumbs.push(await PDFRenderer.createThumbnail(i, 160));
+      this._setProgress((i / info.numPages) * 100);
     }
+    this._hideProgress();
 
     // 保存 ArrayBuffer 以便后续切换时重新加载文档
     const arrayBuffer = info.arrayBuffer;
@@ -754,18 +838,18 @@ const App = {
       throw new Error(`页码越界 ${pageNum}/${file.pageCount}`);
     }
 
-    // 图片/Word/split(Word) 模式：Canvas 已预渲染，直接返回
-    if (this.state.mode === 'photo' || this.state.mode === 'word') {
+    // 图片模式：Canvas 已预渲染，直接返回
+    if (this.state.mode === 'photo') {
       const canvas = file.pages[pageNum - 1];
       if (!canvas) {
-        throw new Error(`图片缓存丢失（${this.state.mode}模式），请重新上传 ${file.name}`);
+        throw new Error(`图片缓存丢失，请重新上传 ${file.name}`);
       }
       return canvas;
     }
 
-    // PDF 模式
+    // Word/Pdf/PdfSplit 模式：懒加载，按需通过 PDF.js 渲染
     if (!file._arrayBuffer || file._arrayBuffer.byteLength === 0) {
-      throw new Error(`PDF 数据丢失，请重新上传 ${file.name}`);
+      throw new Error(`文档数据丢失，请重新上传 ${file.name}`);
     }
 
     // 确保 PDFRenderer 加载了正确文档
@@ -918,9 +1002,10 @@ const App = {
       item.appendChild(check);
       item.appendChild(label);
 
-      // 点击缩略图主体 → 仅预览
-      img.addEventListener('click', (e) => {
-        e.stopPropagation();
+      // 点击缩略图主体 → 仅预览（绑定在整块 div 上更可靠）
+      item.addEventListener('click', (e) => {
+        // 如果点了 ✓ 标记，不触发预览
+        if (e.target === check || check.contains(e.target)) return;
         this._showPage(pageNum);
       });
 
@@ -1485,14 +1570,14 @@ const App = {
 
   // ========== 清空 ==========
   _clearAll() {
-    // cut / number 模式不操作常规 DOM
-    if (this.state.mode === 'cut' || this.state.mode === 'number') return;
+    // cut / number / convert 模式不操作常规 DOM
+    if (this.state.mode === 'cut' || this.state.mode === 'number' || this.state.mode === 'convert') return;
 
     const mode = this.state.mode;
     const placeholders = {
       pdf: '请上传PDF文件',
       pdfsplit: '请上传PDF文件，选择输出格式后分割',
-      word: '请上传Word文件(.docx)',
+      word: '请上传Word文件(.docx / .doc)',
       photo: '请上传图片文件',
     };
     document.getElementById('file-tabs').style.display = 'none';
@@ -1507,8 +1592,8 @@ const App = {
 
   // ========== UI状态更新 ==========
   _updateUI() {
-    // cut / number 模式由独立模块管理，不处理常规 UI
-    if (this.state.mode === 'cut' || this.state.mode === 'number') return;
+    // cut / number / convert 模式由独立模块管理，不处理常规 UI
+    if (this.state.mode === 'cut' || this.state.mode === 'number' || this.state.mode === 'convert') return;
 
     const hasFiles = this.state.fileList.length > 0;
     const isPhoto = this.state.mode === 'photo';
