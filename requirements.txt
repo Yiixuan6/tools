@@ -1,0 +1,11 @@
+# PDF Toolbox — Python dependencies
+# Markitdown is bundled in vendor/, other deps need system install:
+#   pip install -r requirements.txt
+
+flask>=3.0
+beautifulsoup4>=4.12
+charset-normalizer>=3.0
+defusedxml>=0.7
+magika>=0.6.1
+markdownify>=1.0
+requests>=2.28

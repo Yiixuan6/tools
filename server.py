@@ -14,22 +14,31 @@ import webbrowser
 from pathlib import Path
 from datetime import datetime
 
-from flask import Flask, request, jsonify, send_from_directory, send_file
-from markitdown import MarkItDown
-
 # ── Config ──────────────────────────────────────────────
 ROOT_DIR = Path(__file__).parent.absolute()
 DEFAULT_PORT = 60000
 
+# Add vendor directory to sys.path for bundled dependencies (markitdown)
+sys.path.insert(0, str(ROOT_DIR / 'vendor'))
+
+from flask import Flask, request, jsonify, send_from_directory, send_file
+from markitdown import MarkItDown
+
 # ── LibreOffice detection ───────────────────────────────
 _soffice_path = None
 
-# 1. Try PATH (shim or direct install)
-candidate = shutil.which('soffice') or shutil.which('libreoffice')
-if candidate and os.path.isfile(candidate):
-    _soffice_path = candidate
+# 1. Try vendor/ bundle (project-local portable LibreOffice)
+_vendor_lo = ROOT_DIR / 'vendor' / 'libreoffice' / 'program' / 'soffice.exe'
+if _vendor_lo.is_file():
+    _soffice_path = str(_vendor_lo)
 
-# 2. Search scoop apps directory
+# 2. Try PATH (shim or direct install)
+if not _soffice_path:
+    candidate = shutil.which('soffice') or shutil.which('libreoffice')
+    if candidate and os.path.isfile(candidate):
+        _soffice_path = candidate
+
+# 3. Search scoop apps directory
 if not _soffice_path:
     scoop_base = os.path.expandvars(r'%USERPROFILE%\scoop\apps\libreoffice')
     if os.path.isdir(scoop_base):
